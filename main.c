@@ -40,13 +40,21 @@ typedef struct {
     Node *ops;   
 } NodePrint;
 
+typedef struct {
+    char *name;
+    Type type;
+    Node *value;
+} VariableAssigmnent
+
+typedef union {
+    NodePrint print;
+    NodeVariable var;
+    NodeConstant constant;
+} InnerNode
+
 struct Node {
     Node_Kind kind;
-    union {
-        NodePrint print;
-        NodeVariable var;
-        NodeConstant constant;
-    } inner_node;
+    InnerNode inner_node;
 };
 
 typedef struct {
@@ -61,6 +69,26 @@ Node BoolConstructor(bool val) {
     return_node.kind = NK_CONSTANT;
     return_const.type = T_BOOL;
     return_const.value.v_bool = val;
+    return_node.inner_node.constant = return_const;
+    return return_node;
+}
+
+Node IntConstructor(int val) {
+    Node return_node;
+    NodeConstant return_const;
+    return_node.kind = NK_CONSTANT;
+    return_const.type = T_INT;
+    return_const.value.v_int = val;
+    return_node.inner_node.constant = return_const;
+    return return_node;
+}
+
+Node FloatConstructor(float val) {
+    Node return_node;
+    NodeConstant return_const;
+    return_node.kind = NK_CONSTANT;
+    return_const.type = T_FLOAT;
+    return_const.value.v_float = val;
     return_node.inner_node.constant = return_const;
     return return_node;
 }
