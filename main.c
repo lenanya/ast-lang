@@ -50,7 +50,7 @@ typedef struct {
 typedef struct {
     char *name;
     Type type;
-    Node *value;
+    Value value;
 } NodeVariableAssigmnent;
 
 typedef struct {
@@ -205,7 +205,7 @@ Node eval(Node node, Variables *vars, VariableNames *var_names) {
            var.kind = NK_VARIABLE;
            var_inner.var.name = node.inner_node.var_ass.name;
            var_inner.var.type = node.inner_node.var_ass.type;
-           //var_inner.var.value = node.inner_node.var_ass.value; TODO: fix
+           var_inner.var.value = node.inner_node.var_ass.value;
            var.inner_node = var_inner;
            da_append(vars, &var);
            da_append(var_names, var.inner_node.var_ass.name);
