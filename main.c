@@ -223,38 +223,38 @@ bool exec(Program prog) {
 int main(void) {
     Program prog = {0};
 
-    Node error = ErrorConstructor("err");
+    //Node error = ErrorConstructor("err");
 
-    da_append(&prog, &error);
+    //da_append(&prog, &error);
 
-    //Node entry;
-    //entry.kind = NK_PRINT;
+    Node entry;
+    entry.kind = NK_PRINT;
 
-    //Node fmt;
-    //NodeConstant fmt_const;
-    //CharConstructor(&fmt, &fmt_const, "%s\n");
+    Node fmt;
+    NodeConstant fmt_const;
+    CharConstructor(&fmt, &fmt_const, "%s\n");
 
-    //Node fmt_bool;
-    //NodeConstant fmt_bool_const;
-    //CharConstructor(&fmt_bool, &fmt_bool_const, "%d\n");
+    Node fmt_bool;
+    NodeConstant fmt_bool_const;
+    CharConstructor(&fmt_bool, &fmt_bool_const, "%d\n");
 
-    //Node ops;
-    //ops.kind = NK_PRINT;
+    Node ops;
+    ops.kind = NK_PRINT;
 
-    //Node ops2;
-    //NodeConstant ops2_const;
-    //CharConstructor(&ops2, &ops2_const, "Hello World");
+    Node ops2;
+    NodeConstant ops2_const;
+    CharConstructor(&ops2, &ops2_const, "Hello World");
 
-    //ops.inner_node.print = (NodePrint) {&fmt, &ops2};
+    ops.inner_node.print = (NodePrint) {&fmt, &ops2};
 
-    //entry.inner_node.print = (NodePrint) {&fmt_bool, &ops}; 
+    entry.inner_node.print = (NodePrint) {&fmt_bool, &ops}; 
     //Node ops;
     //NodeConstant ops_const;
     //CharConstructor(&ops, &ops_const, "Hello World");
 
     //entry.inner_node.print = (NodePrint){&fmt, &ops};
 
-    //da_append(&prog, &entry);
+    da_append(&prog, &entry);
     
     if (exec(prog)) return 1;
 
