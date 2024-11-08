@@ -8,6 +8,8 @@ typedef enum {
     NK_PRINT, // temporary
     NK_CONSTANT,
     NK_VARIABLE,
+    NK_VARIABLE_ASSIGNMENT,
+    NK_ERROR,
 } Node_Kind;
 
 typedef enum {
@@ -36,6 +38,10 @@ typedef struct {
 } NodeConstant;
 
 typedef struct {
+    char *error_text;
+} NodeError;
+
+typedef struct {
     Node *fmt;
     Node *ops;   
 } NodePrint;
@@ -44,13 +50,14 @@ typedef struct {
     char *name;
     Type type;
     Node *value;
-} VariableAssigmnent
+} NodeVariableAssigmnent;
 
 typedef union {
     NodePrint print;
     NodeVariable var;
     NodeConstant constant;
-} InnerNode
+    NodeError error;
+} InnerNode;
 
 struct Node {
     Node_Kind kind;
@@ -62,6 +69,27 @@ typedef struct {
     size_t capacity;
     Node **items;
 } Program;
+
+typedef struct {
+    size_t count;
+    size_t capacity;
+    Node **items;
+} Variables;
+
+typedef struct {
+    size_t count;
+    size_t capacity;
+    char **items;
+} VariableNames;
+
+Node ErrorConstructor(char *error) {
+    Node return_node;
+    NodeError return_err;
+    return_node.kind = NK_ERROR;
+    return_err.error_text = error;
+    return_node.inner_node.error = return_err;
+    return return_node;
+}
 
 Node BoolConstructor(bool val) {
     Node return_node;
@@ -123,6 +151,16 @@ Node ConstFromVar(Node variable) {
     return return_node;
 }
 
+Node VarFromName(Variables *vars, VariableNames *var_names, char *name) {
+    for (size_t i = 0; i < var_names->count; ++i) {
+        if (strcmp(var_names->items[i], name) == 0) {
+            return *vars->items[i];
+        }
+    }
+    Node err = ErrorConstructor("Unknown Variable");
+    return err;
+}
+
 Node eval(Node node) {
     switch (node.kind) {
         case NK_PRINT:
@@ -152,15 +190,24 @@ Node eval(Node node) {
         case NK_VARIABLE:
             return ConstFromVar(node);
         case NK_CONSTANT:
-            return node; 
+            return node;
+        case NK_ERROR:
+            return node;
         default:
             UNREACHABLE("why u here");
     }
 }
 
 bool exec(Program prog) {
+    Variables vars = {0};
+    VariableNames var_names = {0};
+
     for (size_t i = 0; i < prog.count; ++i) {
         Node result = eval(*prog.items[i]);
+        if (result.kind == NK_ERROR) {
+            nob_log(ERROR, result.inner_node.error.error_text);
+            return 1;
+        }
         if (result.kind != NK_CONSTANT) {
             return 1;
         }
@@ -177,34 +224,38 @@ bool exec(Program prog) {
 int main(void) {
     Program prog = {0};
 
-    Node entry;
-    entry.kind = NK_PRINT;
+    Node error = ErrorConstructor("err");
 
-    Node fmt;
-    NodeConstant fmt_const;
-    CharConstructor(&fmt, &fmt_const, "%s\n");
+    da_append(&prog, &error);
 
-    Node fmt_bool;
-    NodeConstant fmt_bool_const;
-    CharConstructor(&fmt_bool, &fmt_bool_const, "%d\n");
+    //Node entry;
+    //entry.kind = NK_PRINT;
 
-    Node ops;
-    ops.kind = NK_PRINT;
+    //Node fmt;
+    //NodeConstant fmt_const;
+    //CharConstructor(&fmt, &fmt_const, "%s\n");
 
-    Node ops2;
-    NodeConstant ops2_const;
-    CharConstructor(&ops2, &ops2_const, "Hello World");
+    //Node fmt_bool;
+    //NodeConstant fmt_bool_const;
+    //CharConstructor(&fmt_bool, &fmt_bool_const, "%d\n");
 
-    ops.inner_node.print = (NodePrint) {&fmt, &ops2};
+    //Node ops;
+    //ops.kind = NK_PRINT;
 
-    entry.inner_node.print = (NodePrint) {&fmt_bool, &ops}; 
+    //Node ops2;
+    //NodeConstant ops2_const;
+    //CharConstructor(&ops2, &ops2_const, "Hello World");
+
+    //ops.inner_node.print = (NodePrint) {&fmt, &ops2};
+
+    //entry.inner_node.print = (NodePrint) {&fmt_bool, &ops}; 
     //Node ops;
     //NodeConstant ops_const;
     //CharConstructor(&ops, &ops_const, "Hello World");
 
     //entry.inner_node.print = (NodePrint){&fmt, &ops};
 
-    da_append(&prog, &entry);
+    //da_append(&prog, &entry);
     
     if (exec(prog)) return 1;
 
