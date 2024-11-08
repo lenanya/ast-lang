@@ -10,6 +10,7 @@ typedef enum {
     NK_VARIABLE,
     NK_VARIABLE_ASSIGNMENT,
     NK_ERROR,
+    NK_VARIABLE_CALL,
 } Node_Kind;
 
 typedef enum {
@@ -52,11 +53,17 @@ typedef struct {
     Node *value;
 } NodeVariableAssigmnent;
 
+typedef struct {
+    char *name;
+} NodeVariableCall;
+
 typedef union {
     NodePrint print;
     NodeVariable var;
     NodeConstant constant;
     NodeError error;
+    NodeVariableAssigmnent var_ass;
+    NodeVariableCall var_call;
 } InnerNode;
 
 struct Node {
@@ -161,11 +168,11 @@ Node VarFromName(Variables *vars, VariableNames *var_names, char *name) {
     return err;
 }
 
-Node eval(Node node) {
+Node eval(Node node, Variables *vars, VariableNames *var_names) {
     switch (node.kind) {
         case NK_PRINT:
-            char *fmt = eval(*node.inner_node.print.fmt).inner_node.constant.value.v_char;
-            Node ops_node = eval(*node.inner_node.print.ops); 
+            char *fmt = eval(*node.inner_node.print.fmt, vars, var_names).inner_node.constant.value.v_char;
+            Node ops_node = eval(*node.inner_node.print.ops, vars, var_names); 
             switch (ops_node.inner_node.constant.type) {
                 case (T_BOOL):
                     bool ops_bool = ops_node.inner_node.constant.value.v_bool;
@@ -192,6 +199,17 @@ Node eval(Node node) {
         case NK_CONSTANT:
         case NK_ERROR:
             return node;
+        case NK_VARIABLE_ASSIGNMENT:
+           Node var;
+           InnerNode var_inner;
+           var.kind = NK_VARIABLE;
+           var_inner.var.name = node.inner_node.var_ass.name;
+           var_inner.var.type = node.inner_node.var_ass.type;
+           //var_inner.var.value = node.inner_node.var_ass.value; TODO: fix
+           var.inner_node = var_inner;
+           da_append(vars, &var);
+           da_append(var_names, var.inner_node.var_ass.name);
+           return BoolConstructor(false);
         default:
             UNREACHABLE("why u here");
     }
@@ -202,7 +220,7 @@ bool exec(Program prog) {
     VariableNames var_names = {0};
 
     for (size_t i = 0; i < prog.count; ++i) {
-        Node result = eval(*prog.items[i]);
+        Node result = eval(*prog.items[i], &vars, &var_names);
         if (result.kind == NK_ERROR) {
             nob_log(ERROR, result.inner_node.error.error_text);
             return 1;
