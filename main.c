@@ -190,7 +190,6 @@ Node eval(Node node) {
         case NK_VARIABLE:
             return ConstFromVar(node);
         case NK_CONSTANT:
-            return node;
         case NK_ERROR:
             return node;
         default:
